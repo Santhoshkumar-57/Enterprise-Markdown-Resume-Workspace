@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A production-ready, enterprise-grade Markdown resume builder with live preview, premium themes, AI keyword tailoring, and one-click PDF export.">
+    <meta name="theme-color" content="#4f46e5">
+    <title>Enterprise Markdown Resume Workspace</title>
+    
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Marked.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style type="text/tailwindcss">
+        /* Custom Workspace Design Tokens & Variables */
+        :root {
+            --ws-bg: #f8fafc;
+            --ws-panel-bg: #ffffff;
+            --ws-border: #e2e8f0;
+            --ws-text: #0f172a;
+            --ws-text-muted: #64748b;
+            --ws-header-bg: #ffffff;
+            --ws-shadow: rgba(0, 0, 0, 0.05);
+            
+            --editor-bg: #ffffff;
+            --editor-text: #0f172a;
+            --editor-gutter-bg: #f8fafc;
+            --editor-gutter-text: #94a3b8;
+            --editor-gutter-border: #e2e8f0;
+            --editor-active-line: #f1f5f9;
+        }
+
+        html.dark {
+            --ws-bg: #090d16;
+            --ws-panel-bg: #0f172a;
+            --ws-border: #1e293b;
+            --ws-text: #f8fafc;
+            --ws-text-muted: #94a3b8;
+            --ws-header-bg: #0f172a;
+            --ws-shadow: rgba(0, 0, 0, 0.3);
+            
+            --editor-bg: #0b0f19;
+            --editor-text: #f8fafc;
+            --editor-gutter-bg: #030712;
+            --editor-gutter-text: #475569;
+            --editor-gutter-border: #1e293b;
+            --editor-active-line: rgba(30, 41, 59, 0.4);
+        }
+
+        /* Workspace Core Styles */
+        body {
+            background-color: var(--ws-bg);
+            color: var(--ws-text);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .ws-panel {
+            background-color: var(--ws-panel-bg);
+            border-color: var(--ws-border);
+        }
+
+        .ws-text {
+            color: var(--ws-text);
+        }
+
+        .ws-text-muted {
+            color: var(--ws-text-muted);
+        }
+
+        .ws-border {
+            border-color: var(--ws-border);
+        }
+
+        .ws-shadow {
+            box-shadow: 0 4px 20px -2px var(--ws-shadow);
+        }
+
+        /* Editor Syntax Coloring & Gutter Sync */
+        .editor-textarea {
+            background-color: transparent;
+            color: var(--editor-text);
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 0.875rem;
+            line-height: 1.5rem; /* 24px */
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            caret-color: #6366f1;
+        }
+
+        .editor-gutter {
+            background-color: var(--editor-gutter-bg);
+            color: var(--editor-gutter-text);
+            border-right: 1px solid var(--editor-gutter-border);
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 0.875rem;
+            line-height: 1.5rem; /* 24px */
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .editor-bg {
+            background-color: var(--editor-bg);
+        }
+
+        .editor-highlight-line {
+            background-color: var(--editor-active-line);
+        }
+
+        /* Physical A4 Sheet Live Canvas Style */
+        #resume-canvas {
+            width: 210mm; /* A4 width */
+            min-height: 297mm; /* A4 height */
+            padding: 20mm;
+            background-color: #ffffff;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            color: #1e293b;
+            transform-origin: top left;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        /* Custom Scrollbar for Workspace Chrome */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        html.dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* PREMIUM THEME - EXECUTIVE CORPORATE */
+        .theme-executive {
+            font-family: 'Inter', sans-serif;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+        .theme-executive .resume-header {
+            text-align: center;
+            border-bottom: 2px double #1e3a8a;
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .theme-executive .resume-header h1 {
+            font-family: 'Merriweather', serif;
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+        .theme-executive .resume-header p {
+            color: #475569;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .theme-executive .resume-section h2 {
+            font-family: 'Merriweather', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            border-bottom: 1px solid #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.075em;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.2rem;
+        }
+        .theme-executive .resume-section h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 0.5rem;
+            margin-bottom: 0.25rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .theme-executive .resume-section p {
+            font-size: 0.875rem;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+        .theme-executive .resume-section ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .theme-executive .resume-section li {
+            font-size: 0.875rem;
+            color: #334155;
+            margin-bottom: 0.3rem;
+        }
+        .theme-executive .resume-section hr {
+            border-color: #cbd5e1;
+            margin: 1.25rem 0;
+        }
+
+        /* PREMIUM THEME - TECH MINIMALIST */
+        .theme-tech {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            line-height: 1.5;
+        }
+        .theme-tech .resume-header {
+            border-left: 4px solid #0f172a;
+            padding-left: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+        .theme-tech .resume-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+        .theme-tech .resume-header p {
+            color: #475569;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 0.5rem;
+        }
+        .theme-tech .resume-section h2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.25rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .theme-tech .resume-section h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+        .theme-tech .resume-section p {
+            font-size: 0.875rem;
+            color: #475569;
+        }
+        .theme-tech .resume-section ul {
+            list-style-type: square;
+            padding-left: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        .theme-tech .resume-section li {
+            font-size: 0.85rem;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+        .theme-tech .skills-section ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            padding-left: 0;
+            list-style-type: none;
+            margin-top: 0.5rem;
+        }
+        .theme-tech .skills-section li {
+            background-color: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* PREMIUM THEME - CREATIVE MODERN */
+        .theme-creative {
+            font-family: 'Outfit', sans-serif;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+        .theme-creative .resume-header {
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .theme-creative .resume-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
+        .theme-creative .resume-header p {
+            color: #e0e7ff;
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+            font-weight: 300;
+        }
+        .theme-creative .resume-section h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #4f46e5;
+            border-bottom: 2px solid #e0e7ff;
+            padding-bottom: 0.35rem;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .theme-creative .resume-section h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+        .theme-creative .resume-section p {
+            font-size: 0.875rem;
+            color: #475569;
+        }
+        .theme-creative .resume-sidebar {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .theme-creative .resume-sidebar .resume-section h2 {
+            color: #475569;
+            border-bottom: 2px solid #cbd5e1;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+        .theme-creative .skills-section ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            padding-left: 0;
+            list-style-type: none;
+            margin-top: 0.5rem;
+        }
+        .theme-creative .skills-section li {
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .theme-creative .resume-main {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .theme-creative .resume-main .resume-section h3 {
+            display: flex;
+            justify-content: space-between;
+        }
+        .theme-creative .resume-main ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            margin-top: 0.25rem;
+        }
+        .theme-creative .resume-main li {
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 0.25rem;
+        }
+
+        /* PRINT STYLES - FLAWLESS PAGE COMPRESSION & HIDING */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* Hide entire workspace UI controls */
+            .no-print, header, #editor-pane, #left-pane, #ai-hub-panel, .zoom-container, #cheat-sheet-drawer {
+                display: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
+            /* Position the preview canvas full bleed */
+            #right-pane {
+                width: 100% !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: transparent !important;
+                position: static !important;
+            }
+            #canvas-wrapper {
+                width: 100% !important;
+                height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                transform: none !important;
+                position: static !important;
+            }
+            #resume-canvas {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 15mm !important; /* Elegant paper border margin */
+                background: white !important;
+                position: static !important;
+                transform: none !important;
+            }
+            /* Theme specifics to support color background printing */
+            .theme-creative .resume-sidebar {
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .theme-creative .resume-header {
+                background: linear-gradient(135deg, #4f46e5, #06b6d4) !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .theme-creative .skills-section li {
+                background-color: #e0e7ff !important;
+                color: #4f46e5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .theme-tech .skills-section li {
+                background-color: #f1f5f9 !important;
+                color: #334155 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .theme-tech .resume-section h2 {
+                background-color: #f8fafc !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            /* Page Break Optimizations */
+            h1, h2, h3 {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+            .resume-section {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            p, li {
+                orphans: 3;
+                widows: 3;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col">
+
+    <!-- GLOBAL WORKSPACE HEADER -->
+    <header class="no-print h-16 px-6 ws-panel border-b flex items-center justify-between ws-shadow z-20 transition-all duration-300">
+        <!-- Logo and Brand -->
+        <div class="flex items-center space-x-3">
+            <div class="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-indigo-600/30">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <span class="font-bold tracking-tight text-base ws-text">Antigravity Resume Workspace</span>
+                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200">Enterprise</span>
+            </div>
+        </div>
+
+        <!-- Sync Auto-save Indicator Status -->
+        <div id="save-status" class="flex items-center space-x-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800/80 rounded-full border ws-border">
+            <i data-lucide="check-circle" class="h-4 w-4 text-emerald-500"></i>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Saved to browser</span>
+        </div>
+
+        <!-- Center Controls: Theme, Zoom, Modes -->
+        <div class="flex items-center space-x-4">
+            <!-- Theme Engine Switcher Selector -->
+            <div class="flex items-center space-x-2">
+                <label for="theme-selector" class="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <i data-lucide="palette" class="w-3.5 h-3.5"></i> Style:
+                </label>
+                <select id="theme-selector" onchange="changeTheme(this.value)" class="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border ws-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer">
+                    <option value="executive">Executive Corporate</option>
+                    <option value="tech">Tech Minimalist</option>
+                    <option value="creative">Creative Modern</option>
+                </select>
+            </div>
+
+            <!-- Workspace Dark/Light Mode toggle -->
+            <button onclick="toggleWorkspaceTheme()" class="p-2 bg-slate-100 dark:bg-slate-800 border ws-border rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition" title="Toggle Workspace Color Mode">
+                <i data-lucide="moon" id="workspace-theme-icon" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Actions: AI target and PDF Export -->
+        <div class="flex items-center space-x-2.5">
+            <button onclick="toggleAiHub()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border ws-border rounded-lg text-xs font-semibold transition">
+                <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i>
+                <span>Tailor Resume</span>
+            </button>
+            <button onclick="triggerPdfExport()" class="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-lg text-xs font-semibold shadow-md shadow-indigo-600/20 transition">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span>Export PDF</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- WORKSPACE WORK AREA -->
+    <div class="flex-1 flex overflow-hidden relative">
+
+        <!-- LEFT PANEL: EDITOR & CHEAT SHEET -->
+        <div id="left-pane" class="w-1/2 flex flex-row border-r ws-border h-full relative transition-all duration-300">
+            
+            <!-- Collapsible Cheat Sheet Drawer -->
+            <div id="cheat-sheet-drawer" class="w-0 overflow-hidden flex flex-col h-full bg-slate-50 dark:bg-slate-900 border-r ws-border transition-all duration-300">
+                <div class="p-4 border-b ws-border flex items-center justify-between min-w-[280px]">
+                    <span class="font-bold text-sm flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4 text-indigo-500"></i> Markdown Cheat Sheet
+                    </span>
+                    <button onclick="toggleCheatSheet()" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md text-slate-400">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 min-w-[280px] text-xs">
+                    <p class="text-slate-500 dark:text-slate-400">Click any component below to insert template syntax into your editor:</p>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <span class="font-semibold block mb-1 text-slate-400">Headings</span>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button onclick="insertMarkdown('# Header 1\\n')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border"># H1 Header</button>
+                                <button onclick="insertMarkdown('## Header 2\\n')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">## H2 Section</button>
+                                <button onclick="insertMarkdown('### Header 3\\n')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">### H3 Detail</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="font-semibold block mb-1 text-slate-400">Emphasis</span>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button onclick="insertMarkdown('**Bold Text**')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">**Bold**</button>
+                                <button onclick="insertMarkdown('*Italic Text*')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">*Italic*</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="font-semibold block mb-1 text-slate-400">Structure</span>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button onclick="insertMarkdown('- List Item\\n')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">- Bullet List</button>
+                                <button onclick="insertMarkdown('1. First Item\\n')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">1. Ordered List</button>
+                                <button onclick="insertMarkdown('\\n---\\n')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">--- Line Divider</button>
+                                <button onclick="insertMarkdown('[Link Text](URL)')" class="text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">[Link Text](URL)</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="font-semibold block mb-1 text-slate-400">Tables</span>
+                            <button onclick="insertMarkdown('\\n| Skill | Level |\\n|---|---|\\n| SQL | Expert |\\n')" class="w-full text-left px-2 py-1 bg-slate-200/50 dark:bg-slate-800 hover:bg-indigo-500 hover:text-white rounded border ws-border">Insert Skill Table</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Core Panel -->
+            <div class="flex-1 flex flex-col h-full editor-bg">
+                <!-- Editor Pane Header -->
+                <div class="h-10 px-4 border-b ws-border flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <button onclick="toggleCheatSheet()" class="flex items-center gap-1 text-xs font-semibold text-indigo-500 hover:text-indigo-600" title="Cheat Sheet">
+                            <i data-lucide="help-circle" class="w-4 h-4"></i>
+                            <span>Cheat Sheet</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-2.5">
+                        <button onclick="restoreTemplate()" class="text-xs text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition" title="Restore Template">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            <span>Reset Template</span>
+                        </button>
+                        <button onclick="copyRawMarkdown()" class="text-xs text-slate-400 hover:text-indigo-500 flex items-center gap-1 transition" title="Copy Raw Markdown">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>Copy MD</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sync Editor Gutter and Textarea layout -->
+                <div class="flex-1 flex flex-row overflow-hidden relative">
+                    <!-- Line Numbers Gutter -->
+                    <div id="line-numbers" class="w-12 select-none text-right pr-3.5 overflow-hidden flex flex-col editor-gutter">
+                        <!-- Synced line offsets rendered here -->
+                    </div>
+
+                    <!-- Textarea Editor Scrollable Body -->
+                    <div class="flex-1 relative h-full">
+                        <!-- Scrollable background containing active-line visual wrapper -->
+                        <div id="editor-bg-scroll" class="absolute inset-0 overflow-y-auto overflow-x-hidden pointer-events-none select-none">
+                            <div class="relative w-full h-full">
+                                <div id="active-line-highlight" class="absolute left-0 right-0 h-6 editor-highlight-line pointer-events-none transition-all duration-75"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Real text editing area -->
+                        <textarea id="editor" class="absolute inset-0 w-full h-full px-4 resize-none overflow-y-auto outline-none editor-textarea z-10" placeholder="Type Markdown here..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: LIVE PREVIEW CONTAINER -->
+        <div id="right-pane" class="w-1/2 flex flex-col bg-slate-100 dark:bg-slate-950/80 h-full overflow-hidden transition-all duration-300">
+            <!-- Preview Controls Bar -->
+            <div class="no-print h-10 px-4 border-b ws-border flex items-center justify-between bg-white dark:bg-slate-900/50 z-10">
+                <div class="flex items-center space-x-1">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Live Preview Canvas</span>
+                </div>
+                
+                <!-- Zooming Layout Modifiers -->
+                <div class="zoom-container flex items-center space-x-2">
+                    <button onclick="adjustZoom(-0.1)" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded text-slate-500" title="Zoom Out">
+                        <i data-lucide="zoom-out" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <span id="zoom-percentage" class="text-xs font-mono text-slate-500 dark:text-slate-400 w-10 text-center">100%</span>
+                    <button onclick="adjustZoom(0.1)" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded text-slate-500" title="Zoom In">
+                        <i data-lucide="zoom-in" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="autoFitZoom()" class="text-xs px-1.5 py-0.5 border ws-border rounded hover:bg-slate-200 dark:hover:bg-slate-800 font-semibold" title="Auto Fit Width">
+                        Fit
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scroll view wrap of sheet -->
+            <div id="preview-scroll-container" class="flex-1 overflow-auto p-8 flex justify-center items-start">
+                <div id="canvas-wrapper" class="relative">
+                    <div id="resume-canvas" class="transition-transform duration-100 ease-out">
+                        <!-- Markdown Output goes here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT-MOST PANEL: JOB DESCRIPTION MATCHING / AI PROMPT HUB -->
+        <div id="ai-hub-panel" class="w-0 flex flex-col bg-white dark:bg-slate-900 border-l ws-border transition-all duration-300 overflow-hidden h-full z-10">
+            <div class="p-4 border-b ws-border flex items-center justify-between min-w-[320px]">
+                <span class="font-bold text-sm flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-indigo-500"></i> AI Target Role Tailoring
+                </span>
+                <button onclick="toggleAiHub()" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-md text-slate-400">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 min-w-[320px]">
+                <div>
+                    <label for="job-desc" class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Paste Target Job Description:</label>
+                    <textarea id="job-desc" class="w-full h-32 p-3 text-xs bg-slate-50 dark:bg-slate-950 border ws-border rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 dark:text-slate-100" placeholder="Paste target description here to scan for missing keywords..."></textarea>
+                </div>
+
+                <button onclick="scanJobDescription()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-md shadow-indigo-600/10 transition flex items-center justify-center gap-2">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    <span>Analyze Match Rate</span>
+                </button>
+
+                <!-- Scan match outputs area -->
+                <div id="scan-results-box" class="hidden space-y-4 pt-3 border-t ws-border">
+                    <!-- Progress rate match -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-semibold text-slate-500">Keywords Match Score:</span>
+                            <span id="match-score-text" class="text-xs font-bold text-indigo-500">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="match-score-bar" class="bg-indigo-600 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Split keyword tabs views -->
+                    <div class="space-y-3">
+                        <div>
+                            <span id="missing-keywords-header" class="block text-xs font-bold text-rose-500 mb-1.5">Missing Keywords:</span>
+                            <div id="missing-keywords-container" class="flex flex-wrap gap-1">
+                                <!-- Missing skill tags -->
+                            </div>
+                        </div>
+
+                        <div>
+                            <span id="matched-keywords-header" class="block text-xs font-bold text-emerald-500 mb-1.5">Matched Keywords:</span>
+                            <div id="matched-keywords-container" class="flex flex-wrap gap-1">
+                                <!-- Matched skill tags -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Optimization Prompt Generator section -->
+                    <div class="pt-3 border-t ws-border">
+                        <button onclick="copyOptimizerPrompt()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-2">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span id="copy-prompt-btn-text">Copy AI Optimizer Prompt</span>
+                        </button>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 text-center">Copies a detailed priming prompt with your current resume, target description, and missing terms to paste into ChatGPT/Claude.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAIN CORE LOGIC APPLICATION SCRIPT -->
+    <script>
+        const defaultTemplate = `# ELIZABETH CHEN
+**Senior Principal Product Manager**  
+chen.elizabeth@email.com | +1 (555) 019-2834 | San Francisco, CA | linkedin.com/in/elizabethchen
+
+---
+
+## Executive Summary
+Results-driven Senior Principal Product Manager with over 12 years of experience leading cross-functional teams to design, scale, and optimize enterprise SaaS platforms. Proven track record of driving $50M+ ARR growth, managing high-performing product portfolios, and implementing AI-driven features. Expertise in cloud architecture, machine learning integrations, and agile frameworks.
+
+## Professional Experience
+
+### Senior Principal Product Manager | CloudScale Tech
+*2021 – Present | San Francisco, CA*
+- Spearheaded the product strategy and lifecycle of the enterprise AI Analytics platform, growing ARR from $20M to $75M in under 3 years.
+- Directed a cross-functional squad of 45 engineers, designers, and marketers to launch a predictive forecasting module, reducing customer churn by 18%.
+- Championed API-first product integrations that shortened enterprise client onboarding times from 6 weeks to 4 days.
+
+### Lead Product Manager | InnovateSaaS
+*2017 – 2021 | Seattle, WA*
+- Owned the core billing infrastructure and security compliance pipeline, ensuring zero downtime for 2M+ active daily users.
+- Designed and launched a self-serve developer portal that expanded API usage by 150% and generated a new $12M annual revenue stream.
+- Collaborated with UX designers to conduct 100+ customer interviews, redesigning the primary dashboard to improve user retention by 25%.
+
+### Senior Product Manager | DataFlow Systems
+*2014 – 2017 | Austin, TX*
+- Launched a real-time data ingestion pipeline processing 50B+ events daily, serving Fortune 500 financial clients.
+- Led the Scrum team through 40+ successful sprint cycles, achieving a 95% on-time release rate.
+- Partnered with Sales to close $8M in enterprise client accounts by delivering tailored product proofs-of-concept.
+
+## Skills & Expertise
+- **Product Management:** Roadmap Strategy, Product-led Growth (PLG), User Research, A/B Testing.
+- **Technologies:** SQL, Python, AWS (EC2, S3, RDS), Kubernetes, Docker, REST APIs, Jira, Tableau, Figma.
+- **Methodologies:** Agile, Scrum, Kanban, Lean Startup, Design Thinking.
+
+## Education
+
+### Master of Science in Computer Science
+*Stanford University | Graduate Class of 2014*
+
+### Bachelor of Science in Business Administration
+*University of Texas at Austin | Graduate Class of 2012*
+
+## Certifications & Languages
+- Certified Scrum Product Owner (CSPO) – Scrum Alliance (2018)
+- AWS Certified Cloud Practitioner (2020)
+- **Languages:** English (Native), Mandarin (Fluent)
+`;
+
+        const industryKeywords = [
+            'python', 'javascript', 'typescript', 'react', 'vue', 'angular', 'node', 'express', 'sql', 'nosql', 'mongodb', 
+            'postgresql', 'mysql', 'aws', 'azure', 'gcp', 'cloud', 'docker', 'kubernetes', 'ci/cd', 'git', 'agile', 
+            'scrum', 'kanban', 'product management', 'project management', 'saas', 'enterprise', 'roadmap', 'analytics', 
+            'data science', 'machine learning', 'ai', 'ui/ux', 'figma', 'design thinking', 'user research', 'a/b testing', 
+            'marketing', 'sales', 'finance', 'compliance', 'security', 'billing', 'api', 'graphql', 'rest api', 
+            'microservices', 'scala', 'go', 'rust', 'c++', 'java', 'devops', 'terraform', 'ansible', 'jenkins', 'tableau', 
+            'powerbi', 'excel', 'crm', 'seo', 'leadership', 'communication', 'strategy', 'collaboration'
+        ];
+
+        let currentTheme = 'executive';
+        let currentZoom = 1.0;
+        let isSaving = false;
+        let saveTimeout;
+
+        const textarea = document.getElementById('editor');
+        const gutter = document.getElementById('line-numbers');
+        const bgScroll = document.getElementById('editor-bg-scroll');
+        const activeLine = document.getElementById('active-line-highlight');
+        const themeSelector = document.getElementById('theme-selector');
+
+        // Initial setup and startup
+        window.addEventListener('DOMContentLoaded', () => {
+            // Load theme & workspace color mode preferences
+            const savedTheme = localStorage.getItem('resume_theme');
+            if (savedTheme) {
+                currentTheme = savedTheme;
+                themeSelector.value = currentTheme;
+            }
+
+            const savedWorkspaceDark = localStorage.getItem('workspace_dark_mode');
+            if (savedWorkspaceDark === 'false') {
+                document.documentElement.classList.remove('dark');
+                updateWorkspaceIcon(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                updateWorkspaceIcon(true);
+            }
+
+            // Load saved content or defaults
+            const savedContent = localStorage.getItem('resume_markdown');
+            if (savedContent) {
+                textarea.value = savedContent;
+            } else {
+                textarea.value = defaultTemplate;
+            }
+
+            // Setup Editor Sync Scroll
+            textarea.addEventListener('scroll', () => {
+                gutter.scrollTop = textarea.scrollTop;
+                bgScroll.scrollTop = textarea.scrollTop;
+            });
+
+            // Input handlers
+            textarea.addEventListener('input', () => {
+                updateLineNumbers();
+                updateActiveLine();
+                renderResumeLive();
+                triggerAutoSave();
+            });
+            textarea.addEventListener('keyup', updateActiveLine);
+            textarea.addEventListener('click', updateActiveLine);
+
+            // Marked options
+            marked.setOptions({
+                breaks: true,
+                gfm: true
+            });
+
+            // Initial parses
+            updateLineNumbers();
+            renderResumeLive();
+            
+            // Wait for DOM load to establish autofit zoom
+            setTimeout(() => {
+                autoFitZoom();
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, 100);
+        });
+
+        // Window resize adjusts zoom in dynamic way
+        window.addEventListener('resize', () => {
+            if (document.getElementById('zoom-percentage').innerText === 'Fit') {
+                autoFitZoom();
+            } else {
+                setZoom(currentZoom);
+            }
+        });
+
+        // ----------------- STATE & AUTO-SAVE -----------------
+        function triggerAutoSave() {
+            const statusEl = document.getElementById('save-status');
+            statusEl.innerHTML = `
+                <svg class="animate-spin h-3.5 w-3.5 text-indigo-500 mr-1.5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Saving...</span>
+            `;
+
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem('resume_markdown', textarea.value);
+                localStorage.setItem('resume_theme', currentTheme);
+                statusEl.innerHTML = `
+                    <svg class="h-4 w-4 text-emerald-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Saved to browser</span>
+                `;
+            }, 800);
+        }
+
+        function restoreTemplate() {
+            if (confirm("Are you sure you want to reset your changes back to the default executive template? This will overwrite active changes.")) {
+                textarea.value = defaultTemplate;
+                updateLineNumbers();
+                updateActiveLine();
+                renderResumeLive();
+                triggerAutoSave();
+            }
+        }
+
+        function copyRawMarkdown() {
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                alert("Raw resume Markdown text copied to clipboard!");
+            });
+        }
+
+        // ----------------- EDITOR SYSTEM -----------------
+        function updateLineNumbers() {
+            const lines = textarea.value.split('\n');
+            const lineCount = lines.length;
+            let html = '';
+            for (let i = 1; i <= lineCount; i++) {
+                html += `<div class="h-6 pr-1">${i}</div>`;
+            }
+            gutter.innerHTML = html;
+        }
+
+        function updateActiveLine() {
+            const textBeforeCaret = textarea.value.substring(0, textarea.selectionStart);
+            const lineIndex = textBeforeCaret.split('\n').length - 1;
+            const lineGap = 24; // line height in px
+            const paddingTop = 16; // pad-y is 1rem (16px)
+            
+            const topPosition = paddingTop + (lineIndex * lineGap);
+            activeLine.style.top = `${topPosition}px`;
+        }
+
+        // Modified function to insert text correctly at current cursor placement
+        function insertMarkdown(template) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const before = text.substring(0, start);
+            const after = text.substring(end, text.length);
+            
+            textarea.value = before + template + after;
+            textarea.selectionStart = textarea.selectionEnd = start + template.length;
+            textarea.focus();
+            
+            updateLineNumbers();
+            updateActiveLine();
+            renderResumeLive();
+            triggerAutoSave();
+        }
+
+        function toggleCheatSheet() {
+            const drawer = document.getElementById('cheat-sheet-drawer');
+            if (drawer.classList.contains('w-0')) {
+                drawer.className = "w-72 overflow-hidden flex flex-col h-full bg-slate-50 dark:bg-slate-900 border-r ws-border transition-all duration-300";
+            } else {
+                drawer.className = "w-0 overflow-hidden flex flex-col h-full bg-slate-50 dark:bg-slate-900 border-r ws-border transition-all duration-300";
+            }
+        }
+
+        // ----------------- PARSING & THEMES engine -----------------
+        function changeTheme(themeName) {
+            currentTheme = themeName;
+            renderResumeLive();
+            triggerAutoSave();
+        }
+
+        function renderResumeLive() {
+            const mdText = textarea.value;
+            try {
+                const parsedHTML = marked.parse(mdText);
+                const structuredHTML = processHTMLForThemes(parsedHTML, currentTheme);
+                document.getElementById('resume-canvas').innerHTML = structuredHTML;
+                
+                // Keep scaled canvas height boundaries updated
+                setZoom(currentZoom);
+                
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            } catch (error) {
+                console.error("Markdown rendering syntax error", error);
+                document.getElementById('resume-canvas').innerHTML = `
+                    <div class="p-6 text-rose-500 border border-rose-200 bg-rose-50 dark:bg-rose-950/20 dark:border-rose-900 rounded-lg">
+                        <h4 class="font-bold text-base flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-circle"></i> Rendering Error
+                        </h4>
+                        <p class="text-xs">There was an issue processing your markdown. Please check your syntax.</p>
+                        <pre class="mt-4 p-2 bg-slate-950 text-slate-100 text-xs rounded font-mono overflow-auto">${error.message}</pre>
+                    </div>
+                `;
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }
+        }
+
+        function processHTMLForThemes(htmlContent, theme) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+            const children = Array.from(doc.body.children);
+            
+            const sections = [];
+            let currentSection = null;
+            let headerElements = [];
+
+            // Identify index of first section divider or sub-block
+            let firstH2Index = children.findIndex(el => el.tagName.toLowerCase() === 'h2');
+            if (firstH2Index === -1) firstH2Index = children.length;
+
+            // Header blocks (Everything before the first H2 is treated as executive metadata header)
+            for (let i = 0; i < firstH2Index; i++) {
+                headerElements.push(children[i].cloneNode(true));
+            }
+
+            // Group everything into H2 sections
+            for (let i = firstH2Index; i < children.length; i++) {
+                const el = children[i].cloneNode(true);
+                if (el.tagName.toLowerCase() === 'h2') {
+                    currentSection = {
+                        header: el,
+                        content: []
+                    };
+                    sections.push(currentSection);
+                } else if (currentSection) {
+                    currentSection.content.push(el);
+                }
+            }
+
+            // Construct new layout node wrapper
+            const container = document.createElement('div');
+            container.className = `resume-wrapper theme-${theme}`;
+
+            // Make the header section
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'resume-header';
+            headerElements.forEach(el => headerDiv.appendChild(el));
+            container.appendChild(headerDiv);
+
+            if (theme === 'creative') {
+                // Creative modern theme restructuring: Left sidebar (1/3), Right Main (2/3)
+                const grid = document.createElement('div');
+                grid.className = 'resume-grid grid grid-cols-3 gap-6';
+
+                const sidebar = document.createElement('div');
+                sidebar.className = 'resume-sidebar col-span-1';
+
+                const main = document.createElement('div');
+                main.className = 'resume-main col-span-2';
+
+                // Target categories to place in left sidebar
+                const sidebarKeywords = ['contact', 'skills', 'education', 'languages', 'certifications', 'interests'];
+
+                sections.forEach(sec => {
+                    const title = sec.header.textContent.trim().toLowerCase();
+                    const isSidebar = sidebarKeywords.some(kw => title.includes(kw));
+
+                    const secDiv = document.createElement('div');
+                    secDiv.className = `resume-section section-${title.replace(/[^a-z0-9]/g, '-')}`;
+                    if (title.includes('skills')) secDiv.classList.add('skills-section');
+                    if (title.includes('contact')) secDiv.classList.add('contact-section');
+
+                    secDiv.appendChild(sec.header);
+                    sec.content.forEach(c => secDiv.appendChild(c));
+
+                    if (isSidebar) {
+                        sidebar.appendChild(secDiv);
+                    } else {
+                        main.appendChild(secDiv);
+                    }
+                });
+
+                grid.appendChild(sidebar);
+                grid.appendChild(main);
+                container.appendChild(grid);
+            } else {
+                // Single Column Standard layout (Executive & Tech)
+                const bodyDiv = document.createElement('div');
+                bodyDiv.className = 'resume-body flex flex-col';
+
+                sections.forEach(sec => {
+                    const title = sec.header.textContent.trim().toLowerCase();
+                    const secDiv = document.createElement('div');
+                    secDiv.className = `resume-section section-${title.replace(/[^a-z0-9]/g, '-')}`;
+                    if (title.includes('skills')) secDiv.classList.add('skills-section');
+                    if (title.includes('contact')) secDiv.classList.add('contact-section');
+
+                    secDiv.appendChild(sec.header);
+                    sec.content.forEach(c => secDiv.appendChild(c));
+                    bodyDiv.appendChild(secDiv);
+                });
+
+                container.appendChild(bodyDiv);
+            }
+
+            return container.outerHTML;
+        }
+
+        // ----------------- LIVE PREVIEW ZOOM SYSTEM -----------------
+        function adjustZoom(amount) {
+            let newZoom = currentZoom + amount;
+            newZoom = Math.max(0.5, Math.min(1.8, newZoom)); // limits
+            setZoom(newZoom);
+        }
+
+        function autoFitZoom() {
+            const container = document.getElementById('preview-scroll-container');
+            const containerWidth = container.clientWidth - 64; // pad offset
+            const baseWidth = 794; // approx A4 width at 96 DPI (210mm)
+            const scale = Math.min(1.2, containerWidth / baseWidth);
+            
+            setZoom(scale);
+            document.getElementById('zoom-percentage').innerText = 'Fit';
+        }
+
+        function setZoom(val) {
+            currentZoom = val;
+            const canvas = document.getElementById('resume-canvas');
+            canvas.style.transform = `scale(${currentZoom})`;
+            
+            if (document.getElementById('zoom-percentage').innerText !== 'Fit') {
+                document.getElementById('zoom-percentage').innerText = `${Math.round(currentZoom * 100)}%`;
+            }
+
+            // Sync visual wrapper boundary space sizing so scroll scrollbars stretch appropriately
+            const wrapper = document.getElementById('canvas-wrapper');
+            const baseWidth = 794; // 210mm
+            const baseHeight = canvas.scrollHeight;
+            
+            wrapper.style.width = `${baseWidth * currentZoom}px`;
+            wrapper.style.height = `${baseHeight * currentZoom}px`;
+        }
+
+        // ----------------- WORKSPACE LIGHT/DARK STYLING -----------------
+        function toggleWorkspaceTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('workspace_dark_mode', isDark);
+            updateWorkspaceIcon(isDark);
+        }
+
+        function updateWorkspaceIcon(isDark) {
+            const iconEl = document.getElementById('workspace-theme-icon');
+            if (isDark) {
+                iconEl.setAttribute('data-lucide', 'sun');
+                iconEl.parentElement.setAttribute('title', 'Switch to Workspace Light Mode');
+            } else {
+                iconEl.setAttribute('data-lucide', 'moon');
+                iconEl.parentElement.setAttribute('title', 'Switch to Workspace Dark Mode');
+            }
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        }
+
+        // ----------------- COLLAPSIBLE DRAWERS & PANEL HOOKS -----------------
+        function toggleAiHub() {
+            const panel = document.getElementById('ai-hub-panel');
+            const editorPane = document.getElementById('left-pane');
+            const previewPane = document.getElementById('right-pane');
+            
+            if (panel.classList.contains('w-0')) {
+                panel.className = "w-88 flex flex-col bg-white dark:bg-slate-900 border-l ws-border transition-all duration-300 overflow-hidden h-full z-10";
+                editorPane.className = "w-[35%] flex flex-row border-r ws-border h-full relative transition-all duration-300";
+                previewPane.className = "w-[65%] flex flex-col bg-slate-100 dark:bg-slate-950/80 h-full overflow-hidden transition-all duration-300";
+            } else {
+                panel.className = "w-0 flex flex-col bg-white dark:bg-slate-900 border-l ws-border transition-all duration-300 overflow-hidden h-full z-10";
+                editorPane.className = "w-1/2 flex flex-row border-r ws-border h-full relative transition-all duration-300";
+                previewPane.className = "w-1/2 flex flex-col bg-slate-100 dark:bg-slate-950/80 h-full overflow-hidden transition-all duration-300";
+            }
+            
+            // Recalculate zoom fitting
+            setTimeout(autoFitZoom, 310);
+        }
+
+        // ----------------- JOB JD KEYWORD MATCHING & PROMPTING SYSTEM -----------------
+        let lastScanResults = { matched: [], missing: [] };
+
+        function containsKeyword(text, keyword) {
+            const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            if (/^[a-zA-Z0-9_]+$/.test(keyword)) {
+                return new RegExp(`\\b${escaped}\\b`, 'i').test(text);
+            } else {
+                return new RegExp(`(?:^|[^a-zA-Z0-9_#+.-])${escaped}(?:$|[^a-zA-Z0-9_#+.-])`, 'i').test(text);
+            }
+        }
+
+        function scanJobDescription() {
+            const jdText = document.getElementById('job-desc').value.trim();
+            const resumeText = textarea.value;
+            
+            if (!jdText) {
+                alert("Please paste a target job description details to scan.");
+                return;
+            }
+
+            const jdLower = jdText.toLowerCase();
+            const resumeLower = resumeText.toLowerCase();
+
+            const matched = [];
+            const missing = [];
+
+            // Run boundaries-based check matching against industry skills
+            industryKeywords.forEach(kw => {
+                if (containsKeyword(jdLower, kw)) {
+                    if (containsKeyword(resumeLower, kw)) {
+                        matched.push(kw);
+                    } else {
+                        missing.push(kw);
+                    }
+                }
+            });
+
+            lastScanResults = { matched, missing };
+
+            // Render score
+            const total = matched.length + missing.length;
+            const score = total > 0 ? Math.round((matched.length / total) * 100) : 0;
+            
+            document.getElementById('match-score-text').innerText = `${score}%`;
+            document.getElementById('match-score-bar').style.width = `${score}%`;
+
+            // Style score indicator bar color dynamically
+            const bar = document.getElementById('match-score-bar');
+            if (score < 40) {
+                bar.className = "bg-rose-500 h-full transition-all duration-500";
+            } else if (score < 75) {
+                bar.className = "bg-amber-500 h-full transition-all duration-500";
+            } else {
+                bar.className = "bg-emerald-500 h-full transition-all duration-500";
+            }
+
+            // Fill Missing container tags
+            const missingContainer = document.getElementById('missing-keywords-container');
+            document.getElementById('missing-keywords-header').innerText = `Missing Keywords (${missing.length}):`;
+            if (missing.length > 0) {
+                missingContainer.innerHTML = missing.map(kw => `
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-100 dark:border-rose-900/40">
+                        ${kw}
+                    </span>
+                `).join('');
+            } else {
+                missingContainer.innerHTML = `<span class="text-xs text-slate-400 italic">No missing skills detected!</span>`;
+            }
+
+            // Fill Matched container tags
+            const matchedContainer = document.getElementById('matched-keywords-container');
+            document.getElementById('matched-keywords-header').innerText = `Matched Keywords (${matched.length}):`;
+            if (matched.length > 0) {
+                matchedContainer.innerHTML = matched.map(kw => `
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40">
+                        ${kw}
+                    </span>
+                `).join('');
+            } else {
+                matchedContainer.innerHTML = `<span class="text-xs text-slate-400 italic">No matches scanned.</span>`;
+            }
+
+            // Unhide results container
+            document.getElementById('scan-results-box').classList.remove('hidden');
+        }
+
+        function copyOptimizerPrompt() {
+            const jdText = document.getElementById('job-desc').value.trim();
+            const resumeText = textarea.value;
+            const missing = lastScanResults.missing;
+
+            const promptText = `Act as an expert executive resume writer and ATS optimization specialist. 
+I want you to tailor my resume for a role that requires the following target Job Description.
+
+--- TARGET JOB DESCRIPTION ---
+${jdText}
+
+--- MY CURRENT RESUME (MARKDOWN) ---
+${resumeText}
+
+--- IDENTIFIED MISSING KEYWORDS ---
+My scanner has flagged that my resume is currently missing these critical skill terms/keywords: 
+${missing.length > 0 ? missing.join(', ') : 'None flagged, but optimize for overall context'}
+
+--- INSTRUCTIONS ---
+1. Rewrite sections of the resume (specifically experience list items, summary profile, and skills taxonomy) to naturally incorporate the missing keywords where accurate.
+2. Structure the experience bullet points using the CAR (Context, Action, Result) or Google X-Y-Z formula.
+3. Keep the output fully written in valid Markdown format matching my layout, and only output the revised Markdown resume block itself.`;
+
+            navigator.clipboard.writeText(promptText).then(() => {
+                const btnText = document.getElementById('copy-prompt-btn-text');
+                btnText.innerText = "Prompt Copied!";
+                setTimeout(() => {
+                    btnText.innerText = "Copy AI Optimizer Prompt";
+                }, 2000);
+            }).catch(err => {
+                console.error("Clipboard copy failed", err);
+            });
+        }
+
+        // ----------------- EXPORT TO PDF & WINDOW PRINT TRIGGER -----------------
+        function triggerPdfExport() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
